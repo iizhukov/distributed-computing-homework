@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 
 import company.vk.edu.distrib.compute.Dao;
+import company.vk.edu.distrib.compute.iizhukov.shared.http.HttpStatus;
 import company.vk.edu.distrib.compute.kv.RemoteDaoFactory;
 import company.vk.edu.distrib.compute.kv.RemoteDaoFactoryTest;
 
@@ -36,11 +37,11 @@ public final class HttpRemoteDaoFactory implements RemoteDaoFactory<String> {
         public String get(String key) throws IOException {
             var response = send(request(key).GET().build());
 
-            if (response.statusCode() == 404) {
+            if (response.statusCode() == HttpStatus.NOT_FOUND.code()) {
                 throw new NoSuchElementException();
             }
 
-            requireStatus(response, 200);
+            requireStatus(response, HttpStatus.OK.code());
             return new String(response.body(), StandardCharsets.UTF_8);
         }
 
@@ -49,12 +50,12 @@ public final class HttpRemoteDaoFactory implements RemoteDaoFactory<String> {
             var request = request(key)
                     .PUT(HttpRequest.BodyPublishers.ofString(value, StandardCharsets.UTF_8))
                     .build();
-            requireStatus(send(request), 201);
+            requireStatus(send(request), HttpStatus.CREATED.code());
         }
 
         @Override
         public void delete(String key) throws IOException {
-            requireStatus(send(request(key).DELETE().build()), 202);
+            requireStatus(send(request(key).DELETE().build()), HttpStatus.ACCEPTED.code());
         }
 
         private HttpRequest.Builder request(String key) {

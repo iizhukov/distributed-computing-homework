@@ -15,30 +15,22 @@ import company.vk.edu.distrib.compute.iizhukov.kv.api.v0.StatusController;
 import company.vk.edu.distrib.compute.iizhukov.shared.http.BaseController;
 import company.vk.edu.distrib.compute.iizhukov.shared.http.Middleware;
 import company.vk.edu.distrib.compute.kv.KVService;
-import org.jspecify.annotations.Nullable;
 
 public final class Application implements KVService {
     private final List<Middleware> middlewares = List.of(new ErrorHandlingMiddleware());
     private final HttpServer server;
     private final FileDao dao;
-    private final @Nullable ExecutorService executor;
+    private final ExecutorService executor;
 
     public Application(int port) throws IOException {
         this(port, 1, Path.of("/tmp/iizhukov-kv/data.db"));
     }
 
     public Application(int port, int threads, Path dataPath) throws IOException {
-        if (threads < 1) {
-            throw new IllegalArgumentException("Threads must be positive");
-        }
-
+        executor = Executors.newFixedThreadPool(threads);
         server = HttpServer.create(new InetSocketAddress(port), 1);
         dao = new FileDao(dataPath);
-        executor = threads > 1 ? Executors.newFixedThreadPool(threads) : null;
-
-        if (executor != null) {
-            server.setExecutor(executor);
-        }
+        server.setExecutor(executor);
 
         var registry = List.<BaseController<?>>of(
                 new StatusController(dao::isOpen),
@@ -60,9 +52,7 @@ public final class Application implements KVService {
     public void stop() {
         server.stop(1);
 
-        if (executor != null) {
-            executor.close();
-        }
+        executor.close();
 
         try {
             dao.close();
