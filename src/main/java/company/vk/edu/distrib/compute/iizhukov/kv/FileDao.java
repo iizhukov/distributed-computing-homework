@@ -75,9 +75,7 @@ final class FileDao implements Dao<byte[]> {
                 String key = file.readUTF();
 
                 if (command == PUT) {
-                    var value = new byte[file.readInt()];
-                    file.readFully(value);
-                    data.put(key, value);
+                    data.put(key, readValue());
                 } else if (command == DELETE) {
                     data.remove(key);
                 } else {
@@ -88,6 +86,12 @@ final class FileDao implements Dao<byte[]> {
                 break;
             }
         }
+    }
+
+    private byte[] readValue() throws IOException {
+        var value = new byte[file.readInt()];
+        file.readFully(value);
+        return value;
     }
 
     private void compact() throws IOException {
