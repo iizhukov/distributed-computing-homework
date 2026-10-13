@@ -23,7 +23,7 @@ public final class Application implements KVService {
     private final ExecutorService executor;
 
     public Application(int port) throws IOException {
-        this(port, 1, Path.of("/tmp/iizhukov-kv/data.db"));
+        this(port, 1, Path.of("/tmp/iizhukov-kv", Integer.toString(port), "data.db"));
     }
 
     public Application(int port, int threads, Path dataPath) throws IOException {
